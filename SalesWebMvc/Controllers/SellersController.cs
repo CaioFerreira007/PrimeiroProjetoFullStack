@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.VisualStudio.Web.CodeGeneration.Contracts.Messaging;
 using SalesWebMvc.Models;
 using SalesWebMvc.Models.ViewModels;
 using SalesWebMvc.Services;
@@ -74,10 +75,17 @@ namespace SalesWebMvc.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
-            await _sellerService.RemoveAsync(id);
-            return RedirectToAction(nameof(Index));
-        }
+            try
+            {
+                await _sellerService.RemoveAsync(id);
+                return RedirectToAction(nameof(Index));
 
+            }
+            catch (IntegrityException e)
+            {
+                return RedirectToAction (nameof(Error), new { message = e.Message});
+            }
+        }
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -139,9 +147,8 @@ namespace SalesWebMvc.Controllers
             return HttpContext;
         }
 
-        public IActionResult Error(string message, Microsoft.AspNetCore.Http.HttpContext httpContext)
+        public IActionResult Error(string message)
         {
-
             var viewModel = new ErrorViewModel
             {
                 Message = message,
